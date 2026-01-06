@@ -39,6 +39,48 @@ Files of interest:
 - `templates/index.html`: Web UI template served at `/`.
 - `static/`: JavaScript/CSS used by the UI.
 
+**Objectives**
+- **Educational goal:** Provide a compact, hands-on example that demonstrates how to control Docker from Python and build a minimal web UI to manage containers.
+- **Practical goal:** Let users create lightweight Nginx containers that serve a custom HTML file from the host, and practice container lifecycle operations (create/start/stop/delete) via a REST API.
+- **Security awareness goal:** Show why mounting host files and exposing Docker control requires care; document best practices for development vs. production.
+
+**Main code sections (critical roles)**
+Below are the core code locations and their responsibilities so you can quickly find and modify behavior.
+
+- `app.py` (critical)
+   - Docker client initialization:
+      - `client = docker.from_env()` — creates the Docker SDK client using the host environment (Docker socket). Errors here mean Docker isn't available or accessible.
+   - Route `index()`:
+      - Serves the web UI from `templates/index.html`.
+   - Route `list_containers()` (`GET /api/containers`):
+      - Lists all containers (`client.containers.list(all=True)`), extracts short id, name, status, image tag, and port mapping for `80/tcp` if present.
+      - Returns JSON list to the UI.
+   - Route `create_container()` (`POST /api/containers`):
+      - Reads optional `name` from the JSON body.
+      - Resolves `nginx/index.html` on disk and mounts it into the container at `/usr/share/nginx/html/index.html` (read-only).
+      - Runs `nginx:latest` with `ports={'80/tcp': None}` to bind to a random host port.
+      - Handles common Docker errors: `ImageNotFound`, API errors, and filesystem-missing errors.
+   - Route `container_action(container_id)` (`POST /api/containers/<id>/action`):
+      - Accepts `action` in JSON: `start`, `stop`, `delete`.
+      - Uses `client.containers.get(container_id)` and then calls `start()`, `stop()`, or `remove(force=True)` accordingly.
+   - `if __name__ == '__main__'`:
+      - Starts Flask with `app.run(host='0.0.0.0', port=5000, debug=True)` for development.
+
+- `templates/index.html` (UI)
+   - The single-page template that includes the frontend script and placeholders used by `static/script.js` to render the container list and action buttons.
+
+- `static/script.js` (UI logic)
+   - Calls the API endpoints to list containers, create containers, and invoke start/stop/delete actions.
+   - Updates the DOM dynamically; this is the glue between the user and the Flask API.
+
+- `nginx/index.html` (mounted into created containers)
+   - Simple static HTML used to demonstrate mounting host files into containers. This file is what will be visible when you open the container's mapped port in a browser.
+
+If you plan to extend the project, these are the main places to modify behavior:
+- Change the container image or mount path in `create_container()` to use other images.
+- Add authentication or CSRF protection to the Flask routes before exposing the app to untrusted networks.
+- Improve port mapping control to allow fixed ports instead of ephemeral ports.
+
 **Note:** This repo assumes you have Docker running on the host where the Flask app runs, because the app talks to the Docker daemon via the local Docker socket.
 
 **Important security note:** Mounting host files into containers and exposing Docker API access should only be done in trusted environments. Do not expose this application to untrusted networks without proper authentication and isolation.
