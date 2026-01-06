@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker SaaS Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Docker SaaS Manager</h1>
+            <p>Manage your custom Nginx containers efficiently.</p>
+        </header>
+
+        <section class="controls">
+            <h2>Create New Container</h2>
+            <div class="input-group">
+                <input type="text" id="containerName" placeholder="Enter container name (e.g., website-1)">
+                <button onclick="createContainer()" class="btn-primary">Launch Container</button>
+            </div>
+            <div id="statusMessage" class="hidden"></div>
+        </section>
+
+        <section class="container-list">
+            <h2>Your Containers</h2>
+            <div class="table-wrapper">
+                <table id="containersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Image</th>
+                            <th>Port (Host)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be injected by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
